@@ -1,8 +1,18 @@
-from flask import Flask # Import Flask
+from flask import Flask,request, send_from_directory # Import Flask
 from flask_restful import Resource, Api
+from flask_swagger_ui import get_swaggerui_blueprint
+
 import time
 app = Flask(__name__) # Init Flask + API
 api = Api(app)
+
+# Swagger Code
+@app.route('/swag/<path:path>')
+def send_js(path):
+    return send_from_directory('swag', path)
+swaggerui_blueprints=get_swaggerui_blueprint('/swagger','/swag/swag.json',config={'app-name':'TimeKeeper'})
+app.register_blueprint(swaggerui_blueprints,url_prefix='/swagger')
+
 
 TimeKeeper=[] # Log Dictionary
 def timeelapsed(sec): # Formatted Time Elapsed
@@ -40,10 +50,11 @@ class CreateTracker(Resource):
             if x['Log'] == name:
                 if not ('Stop' in x):
                     x['Stop']=time.time()
+
 class SummaryReport(Resource):
     def __init__(self):
         pass
-    def get(self,name): # Gets all the Log of Provided Name
+    def get(self,name): # Gets all the Logs of Provided Name
         FinalReport=[]
         CompleteReport=[]
         TotalDuration=0
@@ -62,7 +73,7 @@ class SummaryReport(Resource):
         else:
             return {"Expenditure":timeelapsed(TotalDuration), "Report": name,"Data":FinalReport}
 
-    def delete(self,name): # Clear Everything
+    def delete(self,name): # Clears Everything
         TimeKeeper=[]
 
 api.add_resource(CreateTracker ,'/Track/<string:name>')
