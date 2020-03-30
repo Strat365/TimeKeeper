@@ -12,10 +12,20 @@ def send_js(path):
 swaggerui_blueprints = get_swaggerui_blueprint('/swagger', '/swag/swag.json', config={'app-name': 'TimeKeeper'})
 app.register_blueprint(swaggerui_blueprints, url_prefix='/swagger')
 
+@app.route('/ui/<path:path>')
+def send_ui(path):
+    return send_from_directory('ui', path)
+
 # Dictionaries | Variables
 TimeKeeper = []  # Log Dictionary
 TaskKeeper = []  # Task Dictionary
-simpleResponse = True  # Text or JSON Response
+simpleResponse = False  # Text or JSON Response
+def isWatch():
+    if ("ESP32" in request.headers.get('User-Agent') or simpleResponse):
+        return True
+    else:
+        return False
+
 def txtresponse(resp):  # Set Headers to Text for simple Responses
     response = make_response(resp, 200)
     response.mimetype = "text/plain"
@@ -35,7 +45,8 @@ def pTrack(name):  # Creates a New Log and Ends Previous Log if it's continuing.
     if len(TimeKeeper) != 0:
         if not ('Stop' in TimeKeeper[-1]):
             TimeKeeper[-1]['Stop'] = time.time()
-    if (len(TaskKeeper) != 0) and name.isnumeric and (int(name) < (len(TaskKeeper) )):
+
+    if (len(TaskKeeper) != 0) and name.isnumeric() and (int(name) < (len(TaskKeeper) )):
         if int(name) < 0:
             name = "Watch Log"
         else:
@@ -44,7 +55,7 @@ def pTrack(name):  # Creates a New Log and Ends Previous Log if it's continuing.
     Tem = {'Log': name, 'Summary': 'http://127.0.0.1:5000/Summary/' + name, 'Start': time.time()}
     TimeKeeper.append(Tem.copy())
     Tem['Start'] = time.ctime(Tem['Start'])
-    return txtresponse("1") if simpleResponse else Tem
+    return txtresponse("1") if isWatch() else Tem
 def dTrack(name):  # Stops Log with given Name
     for ind, x in enumerate(TimeKeeper):
         if x['Log'] == name:
@@ -113,7 +124,7 @@ class dSummaryReport(Resource):
 def pTask(name): # Adds New Task
     Tem = {'Log': (name[:17] + '..') if len(name) > 17 else name}
     TaskKeeper.append(Tem.copy())
-    return txtresponse("1") if simpleResponse else Tem
+    return txtresponse("1") if isWatch() else Tem
 def dTask(name):  # Clears Everything
     global TaskKeeper
     TaskKeeper = []
@@ -126,14 +137,14 @@ def Task(name): # Gets the last n task names. Default n = 30
         curTask += 1
         if curTask > maxTask:
             break
-        if simpleResponse:
+        if isWatch():
             TaskSimple += report['Log'] + " " * (19 - len(report['Log'])) + "\n"
         else:
             TaskReversed.append(report)
     if len(TaskKeeper) != 0:
-        return txtresponse(TaskSimple.rstrip('\n')) if simpleResponse else {"Data": TaskReversed}
+        return txtresponse(TaskSimple.rstrip('\n')) if isWatch() else {"Data": TaskReversed}
     else:
-        return txtresponse("0") if simpleResponse else {"Data": "Dead"}
+        return txtresponse("0") if isWatch() else {"Data": "Dead"}
 
 class TaskList(Resource):
     def __init__(self):
@@ -144,7 +155,7 @@ class TaskList(Resource):
         return pTask(name)
     def delete(self, name):  # Clears Everything
         dTask(name)
-        if simpleResponse:
+        if isWatch():
             return txtresponse("1")
 class pTaskList(Resource):
     def __init__(self):
@@ -156,7 +167,7 @@ class dTaskList(Resource):
         pass
     def get(self, name):  # Clears Everything
         dTask(name)
-        if simpleResponse:
+        if isWatch():
             return txtresponse("1")
 
 api.add_resource(CreateTracker, '/Track/<string:name>')
