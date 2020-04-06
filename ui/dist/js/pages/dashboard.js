@@ -114,7 +114,7 @@ $(function () {
   //$('#revenue-chart').get(0).getContext('2d');
 
   var salesChartData = {
-    labels  : ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+    labels  : ['6 Days Ago', '5 Days Ago', '4 Days Ago', '3 Days Ago', '2 Days Ago', 'Yesterday', 'Today'],
     datasets: [
       {
         label               : 'Digital Goods',
@@ -173,14 +173,14 @@ $(function () {
   var pieChartCanvas = $('#sales-chart-canvas').get(0).getContext('2d')
   var pieData        = {
     labels: [
-        'Instore Sales', 
-        'Download Sales',
-        'Mail-Order Sales', 
+        'Rest of Day', 
+        'This Activity',
+      
     ],
     datasets: [
       {
-        data: [30,12,20],
-        backgroundColor : ['#f56954', '#00a65a', '#f39c12'],
+        data: [30,12],
+        backgroundColor : ['#FFFFFF', '#00a65a'],
       }
     ]
   }
